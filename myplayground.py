@@ -1,138 +1,27 @@
-import numpy as np
+import re
 
-sess.buyin("Choon", "nop", 100)
-sess.buyin("Nop", "choon", 50)
-sess.buyin("Bart", "nop", 100)
-sess.buyin("Nop", "bart", 100)
-sess.buyin("Nop", "choon", 50)
-sess.buyin("Bart", "ter", 50)
-sess.buyin("Bart", "choon", 50)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("Mac", "bart", 100)
-sess.buyin("Bart", "ter", 100)
-sess.buyin("Choon", "bart", 50)
-sess.buyin("Nop", "bart", 100)
-sess.buyin("Ter", "mac", 100)
-sess.buyin("Bart", "ter", 50)
-sess.buyin("Mac", "nop", 100)
-sess.buyin("Choon", "ter", 50)
-sess.buyin("Choon", "nop", 50)
-sess.buyin("Bart", "mac", 100)
-sess.buyin("Nop", "mac", 50)
-sess.buyin("Nop", "ter", 50)
-sess.buyin("Bart", "mac", 100)
-sess.buyin("Bart", "ter", 100)
-sess.buyin("Mac", "nop", 100)
-sess.buyin("Nop", "mac", 100)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("bart", "ter", 50)
-sess.buyin("bart", "nop", 50)
-sess.buyin("Nop", "bart", 100)
-sess.buyin("Ter", "bart", 100)
+
+
+test1 = """can tid ter 9
+
+
+choon tid ter 50
+
+
+can tid ter 50
+
+
+bart tid ter 5"""
 
 
 
 
 
 
+a = test1.split('\n')
+b = test.split('\n')
 
 
-sess = PokerSession(players)
-
-sess.buyin("Ter", "nop", 100)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("Nop", "bart", 100)
-sess.buyin("Nop", "ter", 100)
-sess.buyin("Bart", "nop", 100)
-sess.buyin("Nop", "ter", 100)
-sess.buyin("Bart", "nop", 50)
-sess.buyin("Bart", "ter", 50)
-sess.buyin("bart", "ter", 100)
-sess.buyin("mac", "nop", 100)
-sess.buyin("Nop", "bart", 100)
-sess.buyin("mac", "nop", 100)
-sess.buyin("Nop", "ter", 50)
-sess.buyin("Bart", "nop", 100)
-sess.buyin("bart", "nop", 100)
-sess.buyin("ter", "mac", 50)
-sess.buyin("ter", "bart", 50)
-sess.buyin("ter", "nop", 100)
-sess.buyin("Mac", "ter", 100)
-sess.buyin("Bart", "ter", 50)
-sess.buyin("Bart", "mac", 50)
-sess.buyin("Nop", "bart", 100)
-sess.buyin("bart", "nop", 100)
-sess.buyin("mac", "nop", 100)
-sess.buyin("ter", "nop", 100)
-sess.buyin("ter", "nop", 100)
-sess.buyin("bart", "nop", 100)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("Nop", "ter", 50)
-sess.buyin("Nop", "bart", 50)
-sess.buyin("Mac", "bart", 50)
-sess.buyin("Mac", "nop", 50)
-sess.buyin("bart", "nop", 100)
-sess.buyin("Bart", "nop", 100)
-sess.buyin("Ter", "nop", 100)
-sess.buyin("Bart", "nop", 100)
-sess.buyin("Mac", "ter", 100)
-sess.buyin("Nop", "bart", 100)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("Mac", "bart", 100)
-sess.buyin("Nop", "bart", 50)
-sess.buyin("Ter", "bart", 100)
-sess.buyin("Nop", "mac", 60)
-sess.buyin("bart", "ter", 100)
-sess.buyin("ter", "bart", 200)
-sess.buyin("ter", "bart", 100)
-sess.buyin("Ter", "bart", 100)
-sess.getSummary()
-sess.buyin("ter", "mac", 282)
-sess.buyin("nop", "mac", 300)
-sess.buyin("bart", "mac", 175)
-sess.buyin("nop", "ter", 282)
-sess.buyin("ter", "bart", 50)
-sess.buyin("nop", "bart", 150)
-sess.getSummary()
-sess.buyin("ter", "mac", 100)
-sess.buyin("bart", "mac", 100)
-sess.buyin("nop", "ter", 50)
-sess.buyin("bart", "ter", 50)
-sess.buyin("choon", "ter", 50)
-sess.buyin("mac", "nop", 50)
-sess.buyin("choon", "nop", 50)
-sess.buyin("nop", "bart", 150)
-sess.getSummary()
-
-
-
-
-
-
-sess.buyin("Nop", "mac", 50)
-sess.buyin("Nop", "mac", 50)
-sess.buyin("nop", "mac", 25)
-sess.buyin("ter", "mac", 50)
-sess.buyin("Nop", "mac", 50)
-sess.buyin("Ter", "mac", 25)
-sess.buyin("Ter", "nop", 25)
-sess.buyin("Nop", "ter", 25)
-sess.buyin("Nop", "mac", 25)
-sess.buyin("Ter", "nop", 50)
-sess.buyin("Mac", "nop", 25)
-sess.buyin("Mac", "ter", 25)
-sess.buyin("Nop", "mac", 50)
-sess.buyin("Nop", "ter", 50)
-sess.buyin("Mac", "nop", 25)
-sess.buyin("Mac", "ter", 25)
-sess.buyin("mac", "ter", 25)
-sess.buyin("mac", "nop", 25)
-sess.buyin("Nop", "ter", 50)
-sess.buyin("Nop", "nop", 25)
-sess.buyin("mac", "ter", 50)
-sess.buyin("mac", "ter", 5 )
-sess.buyin("nop", "ter", 50)
-
-sess.getSummary()
+for i in a:
+    if 'tid' in i:
+        print(re.findall('(.+) tid (.+)', i))
