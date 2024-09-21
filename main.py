@@ -1,88 +1,98 @@
-import numpy as np
+import json
+import requests
+import logging
+from flask import Flask, request, jsonify
+from google.cloud import firestore
+from pokerbot import (
+    start_session,
+    check_ongoing_session,
+    start_session,
+    end_session,
+    extract_transaction_details,
+    update_money_owed_and_players,
+    get_secret,
+)
+
+app = Flask(__name__)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[logging.StreamHandler()],
+)
+
+LINE_CHANNEL_ACCESS_TOKEN = get_secret("LINE_CHANNEL_ACCESS_TOKEN")
+
+db = firestore.Client()
+
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "healthy"}), 200
 
 
-class PokerSession():
-    def __init__(self, players_list):
-        players_list = players
-        self.players_list = players_list
-        self.n_players = len(players)
-        self.money_grid = np.zeros((self.n_players, self.n_players))
-        self.owe = np.zeros((self.n_players, self.n_players))
+def reply_message(reply_token, text):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {LINE_CHANNEL_ACCESS_TOKEN}",
+    }
+    data = {"replyToken": reply_token, "messages": [{"type": "text", "text": text}]}
+    url = "https://api.line.me/v2/bot/message/reply"
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    if response.status_code != 200:
+        logging.error(
+            f"ERROR: Failed to send message: {response.status_code} - {response.text}"
+        )
 
-    def add_player(self, new_player):
-        # np.zeros(self.n_players)
-        self.money_grid = np.pad(self.money_grid, pad_width = [(0,1), (0,1)])
-        self.players_list.append(new_player)
 
-    def buyin(self, buyer, seller, amount):
-        self.money_grid[self.players_list.index(buyer.capitalize()), self.players_list.index(seller.capitalize())] += amount
+@app.route("/webhook", methods=["POST"])
+def webhook(request):
+    try:
+        body = request.get_json()
 
-    def getSummary(self):
-        lines = list()
-        print('Raw:')
-        for row in range(self.n_players):
-            for col in range(self.n_players):
-                if row == col:
-                    pass
-                else:
-                    lose_minus_win = self.money_grid[row, col] - self.money_grid[col, row]
-                    if lose_minus_win < 0:
-                        temp = '{loser} owe {winner}: {amount}'.format(loser = players[col], winner =  players[row], amount = int(np.abs(lose_minus_win)))
-                        print(temp)
-                        lines.append(temp)
-                        self.owe[col, row] = lose_minus_win*-1
+        if not body:
+            logging.error("No body received")
+            return jsonify({"status": "Error", "message": "No body received"}), 400
 
-        checker = list()
-        for i in range(self.n_players):
-            profit_loss = self.money_grid[:,i].sum() - self.money_grid[i,:].sum()
-            checker.append(profit_loss)
+        events = body.get("events", [])
+        if not events:
+            logging.warning("No events found in the body")
+            return jsonify({"status": "OK"}), 200
 
-        print('==========================')
+        for event in events:
+            if event.get("type") == "message":
+                reply_token = event.get("replyToken")
+                message = event.get("message", {})
+                message_text = message.get("text", "")
+                message_text = message_text.lower()
+                ongoing_session_id = check_ongoing_session(db)
+                response_text = None
+                if ongoing_session_id:
+                    if "tid" in message_text:
+                        result = extract_transaction_details(message_text)
+                        if result:
+                            person1, person2, amount = result
+                            response_text = update_money_owed_and_players(
+                                ongoing_session_id, person1, person2, amount, db
+                            )
+                        else:
+                            response_text = "Did not update money."
+                    else:
+                        response_text = "There's an ongoing poker session!"
 
-        print('What to transfer:')
-        for i in range(self.n_players):
-            max_cost, max_earn = self.owe[i].argmax(), self.owe[:,i].argmax()
-            if self.owe[max_earn, i] - self.owe[i, max_cost] > 0:
-                self.owe[max_earn, max_cost] += self.owe[i,max_cost]
-                self.owe[max_earn, i] -= self.owe[i,max_cost]
-                self.owe[i,max_cost] -= self.owe[i,max_cost]
-            elif self.owe[max_earn, i] - self.owe[i, max_cost] <= 0:
-                self.owe[max_earn, max_cost] += self.owe[max_earn,i]
-                self.owe[i, max_cost] -= self.owe[max_earn, i]
-                self.owe[max_earn, i] -= self.owe[max_earn, i]
+                if "pokerbot" in message_text:
+                    if "start" in message_text:
+                        response_text = start_session(db)
+                    elif "end" in message_text:
+                        response_text = end_session(db)
+                    else:
+                        response_text = "How can I help you?"
+                if response_text:
+                    reply_message(reply_token, response_text)
 
-        simp_lines = list()
-        for i in range(self.n_players):
-            for j in range(self.n_players):
-                if self.owe[i,j] != 0:
-                    temp = self.players_list[i] + ' owe ' + self.players_list[j] + ' '+ str(self.owe[i,j])
-                    print(temp)
-                    simp_lines.append(temp)
+        return jsonify({"status": "OK"}), 200
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return jsonify({"status": "Error", "message": str(e)}), 500
 
-        print('++++++++++++++++++++++++++')
-        checker2 = list()
-        for i in range(self.n_players):
-            profit_loss = self.owe[:,i].sum() - self.owe[i].sum()
-            checker2.append(profit_loss)
 
-        if checker == checker2:
-            for i in range(self.n_players):
-                print(self.players_list[i] + ' should get '+ str(checker[i]))
-        else:
-            print('Something\'s wrong...')
-        return checker2, simp_lines
-
-        
-players = ['Nop', 'Mac', 'Ter']
-
-sess = PokerSession(players)
-sess.buyin("mac", "ter", 25)
-sess.buyin("mac", "nop", 25)
-sess.buyin("nop", "mac", 50)
-sess.buyin("mac", "nop", 25)
-sess.buyin("nop", "mac", 50)
-sess.buyin("mac", "nop", 25)
-sess.buyin("nop", "mac", 50)
-sess.buyin("mac", "nop", 25)
-
-a = sess.getSummary()
+# if __name__ == "__main__":
+#     app.run(host='0.0.0.0', port=8080)
