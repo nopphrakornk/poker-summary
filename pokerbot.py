@@ -13,7 +13,7 @@ def get_secret(secret_id):
 
 def check_ongoing_session(firestore_db):
     ongoing_session_query = (
-        firestore_db.collection("pokerSession").where("inSession", "==", True).limit(1)
+        firestore_db.collection("pokerSession").filter("inSession", "==", True).limit(1)
     )
     ongoing_session = ongoing_session_query.stream()
     for doc in ongoing_session:
